@@ -1,0 +1,24 @@
+{
+  "name": "peerjs-client-realtime-text",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -p 3721"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/firecow/peerjs-client-realtime-text.git"
+  },
+  "keywords": [
+    "PeerJS",
+    "Realtime",
+    "Text"
+  ],
+  "author": "Mads Jon Nielsen <madsjon@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/firecow/peerjs-client-realtime-text/issues"
+  },
+  "homepage": "https://github.com/firecow/peerjs-client-realtime-text#readme"
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PeerJS</title>
+    <script src="http://cdn.peerjs.com/0.3/peer.min.js"></script>
+
+    <script>
+        var peer = null;
+        var outgoingConnection = null;
+        var urlSearchParams = new URLSearchParams(window.location.search);
+        var inputMessageTime = 0;
+
+        function openSocket() {
+            var port = urlSearchParams.get('port') || 9000;
+            var brokerHost = urlSearchParams.get('brokerHost') || "localhost";
+            var sourceId = urlSearchParams.get('sourceId');
+            peer = new Peer(sourceId, {host: brokerHost, port: port, path: '/', debug: 1});
+            peer.on('error', function(err) {
+                console.error(err);
+            });
+            peer.on('open', function(sourceId) {
+                console.log("Peer Open " + sourceId);
+
+                createOutgoingConnection();
+            });
+            // Listen for incoming connections.
+            peer.on('connection', function(incomingConnection) {
+                incomingConnection.on('data', function(dataStr) {
+                    var data = JSON.parse(dataStr);
+                    if (inputMessageTime < data['time']) {
+                        var message = data['message'];
+                        var inputMessageElement = document.getElementById("inputMessage");
+                        if (message !== inputMessageElement.innerText) {
+                            inputMessageElement.innerText = message;
+                        }
+                    }
+                });
+            });
+        }
+
+        function createOutgoingConnection() {
+            if (peer == null) {
+                console.warn("Cannot create outgoing connection 'peer' is null");
+                return;
+            }
+
+            var destinationId = urlSearchParams.get('destinationId');
+            outgoingConnection = peer.connect(destinationId);
+            outgoingConnection.on('close', function() {
+                // If outgoing connection is closed, try to make a new one every 0.5 second.
+                setTimeout(function() {
+                    createOutgoingConnection();
+                }, 500);
+            });
+
+        }
+
+        function onLoaded() {
+            var sourceId = urlSearchParams.get('sourceId');
+            var destinationId = urlSearchParams.get('destinationId');
+            if (sourceId && destinationId) {
+                openSocket();
+            } else {
+                console.warn("Specify 'sourceId' and 'destinationId' in Query Param");
+            }
+        }
+
+        // Send outputMessage element value every 125 times a second.
+        setInterval(function() {
+            if (outgoingConnection && outgoingConnection.open) {
+                var value = document.getElementById('outputMessage').value;
+                outgoingConnection.send(JSON.stringify({message: value, time: Date.now()}));
+            }
+        }, 8);
+
+    </script>
+
+</head>
+<body onload="onLoaded()">
+<input id="outputMessage" placeholder="message" value="Write Message Here">
+<div id="inputMessage"></div>
+</body>
+</html>
